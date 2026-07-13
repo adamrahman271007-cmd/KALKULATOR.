@@ -1,0 +1,528 @@
+!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Validitas & Reliabilitas</title>
+    <style>
+        :root {
+            --primary: #2b6cb0;
+            --primary-hover: #2c5282;
+            --success: #38a169;
+            --danger: #e53e3e;
+            --bg: #f7fafc;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .grid-layout {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+            color: #4a5568;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #2f855a; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #9b2c2c; }
+        .btn-secondary { background: #edf2f7; color: #4a5568; border: 1px solid var(--border); }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+        }
+
+        th {
+            background: #f7fafc;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-weight: 600;
+        }
+
+        .input-cell {
+            width: 60px;
+            padding: 4px;
+            text-align: center;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+
+        .badge-success { background-color: var(--success); }
+        .badge-danger { background-color: var(--danger); }
+
+        .result-summary {
+            background: #f0fff4;
+            border: 1px solid #c6f6d5;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .result-summary.unreliable {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Kalkulator Validitas & Reliabilitas Kuesioner</h1>
+        <p>Aplikasi analisis kuesioner instan menggunakan Pearson Product Moment & Cronbach's Alpha.</p>
+    </header>
+
+    <div class="grid-layout">
+        <!-- Panel Kontrol -->
+        <div class="card">
+            <h2>Pengaturan Data</h2>
+            <div class="form-group">
+                <label for="input-respondents">Jumlah Responden (N):</label>
+                <input type="number" id="input-respondents" value="10" min="3">
+            </div>
+            <div class="form-group">
+                <label for="input-items">Jumlah Item Soal (K):</label>
+                <input type="number" id="input-items" value="5" min="2">
+            </div>
+            <div class="form-group">
+                <label for="input-rtable">Nilai r-Tabel (Kritis):</label>
+                <input type="number" id="input-rtable" value="0.632" step="0.001">
+                <small style="color: #718096; font-size: 12px; display:block; margin-top:4px;">
+                    *Nilai r-tabel default untuk N=10 (Signifikansi 5%)
+                </small>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-primary" onclick="generateTable()">Ubah Ukuran Tabel</button>
+                <button class="btn-secondary" onclick="fillMockData()">Isi Data Acak (1-5)</button>
+            </div>
+
+            <button class="btn-success" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="calculateAll()">
+                HITUNG ANALISIS
+            </button>
+        </div>
+
+        <!-- Area Data & Hasil -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Tabel Input -->
+            <div class="card">
+                <h2>Matriks Input Data (Skala Likert)</h2>
+                <p style="font-size: 13px; color: #718096; margin-bottom: 10px;">
+                    Silakan masukkan skor jawaban tiap responden pada kolom Item (X1, X2, dst). Kolom Total Skor akan dihitung otomatis.
+                </p>
+                <div class="table-container">
+                    <table id="data-table">
+                        <!-- Generasi dinamis via JS -->
+                    </table>
+                </div>
+            </div>
+
+            <!-- Panel Hasil Analisis -->
+            <div class="card" id="result-card" style="display: none;">
+                <h2>Hasil Analisis Statistik</h2>
+                
+                <!-- Hasil Reliabilitas -->
+                <div id="reliability-box" class="result-summary">
+                    <!-- Dinamis via JS -->
+                </div>
+
+                <!-- Hasil Validitas -->
+                <h3>Rincian Validitas per Item</h3>
+                <div class="table-container" style="margin-top: 10px;">
+                    <table id="validity-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>r-Hitung</th>
+                                <th>r-Tabel</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dinamis via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inisialisasi awal saat halaman dimuat
+    window.onload = function() {
+        generateTable();
+        fillMockData();
+        calculateAll();
+    };
+
+    function generateTable() {
+        const rows = parseInt(document.getElementById('input-respondents').value) || 10;
+        const cols = parseInt(document.getElementById('input-items').value) || 5;
+        
+        if (rows < 3 || cols < 2) {
+            alert('Minimal responden adalah 3 dan minimal item adalah 2.');
+            return;
+        }
+
+        const table = document.getElementById('data-table');
+        table.innerHTML = '';
+
+        // Membuat Header Tabel
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        
+        const thResp = document.createElement('th');
+        thResp.innerText = 'Responden';
+        headerRow.appendChild(thResp);
+
+        for (let j = 1; j <= cols; j++) {
+            const thItem = document.createElement('th');
+            thItem.innerText = 'X' + j;
+            headerRow.appendChild(thItem);
+        }
+
+        const thTotal = document.createElement('th');
+        thTotal.innerText = 'Total';
+        headerRow.appendChild(thTotal);
+        
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Membuat Body Tabel
+        const tbody = document.createElement('tbody');
+        for (let i = 1; i <= rows; i++) {
+            const tr = document.createElement('tr');
+            
+            // Kolom Nama Responden
+            const tdName = document.createElement('td');
+            tdName.innerText = 'R ' + i;
+            tdName.style.fontWeight = '600';
+            tr.appendChild(tdName);
+
+            // Kolom Input Nilai Item
+            for (let j = 1; j <= cols; j++) {
+                const tdInput = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'input-cell';
+                input.min = 0;
+                input.value = 0;
+                input.dataset.row = i - 1;
+                input.dataset.col = j - 1;
+                input.oninput = updateTotals;
+                tdInput.appendChild(input);
+                tr.appendChild(tdInput);
+            }
+
+            // Kolom Total Per Responden
+            const tdTotal = document.createElement('td');
+            tdTotal.id = `total-row-${i-1}`;
+            tdTotal.innerText = '0';
+            tdTotal.style.fontWeight = '600';
+            tr.appendChild(tdTotal);
+
+            tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        
+        // Sembunyikan hasil lama jika ukuran diubah
+        document.getElementById('result-card').style.display = 'none';
+    }
+
+    function fillMockData() {
+        const inputs = document.querySelectorAll('.input-cell');
+        inputs.forEach(input => {
+            // Mengisi nilai acak skala likert 1 sampai 5
+            input.value = Math.floor(Math.random() * 5) + 1;
+        });
+        updateTotals();
+    }
+
+    function updateTotals() {
+        const rows = parseInt(document.getElementById('input-respondents').value);
+        const cols = parseInt(document.getElementById('input-items').value);
+        
+        for (let i = 0; i < rows; i++) {
+            let rowSum = 0;
+            for (let j = 0; j < cols; j++) {
+                const input = document.querySelector(`.input-cell[data-row="${i}"][data-col="${j}"]`);
+                if (input) {
+                    rowSum += parseFloat(input.value) || 0;
+                }
+            }
+            const totalCell = document.getElementById(`total-row-${i}`);
+            if (totalCell) totalCell.innerText = rowSum;
+        }
+    }
+
+    function calculateAll() {
+        updateTotals();
+        
+        const n = parseInt(document.getElementById('input-respondents').value);
+        const k = parseInt(document.getElementById('input-items').value);
+        const rTabel = parseFloat(document.getElementById('input-rtable').value) || 0;
+
+        // 1. Ekstrak Matrix Data dari Input
+        let matrix = [];
+        let totals = [];
+        
+        for (let i = 0; i < n; i++) {
+            let rowData = [];
+            for (let j = 0; j < k; j++) {
+                const val = parseFloat(document.querySelector(`.input-cell[data-row="${i}"][data-col="${j}"]`).value) || 0;
+                rowData.push(val);
+            }
+            matrix.push(rowData);
+            totals.push(parseFloat(document.getElementById(`total-row-${i}`).innerText) || 0);
+        }
+
+        // 2. Hitung Validitas (Korelasi Pearson Product Moment untuk setiap item terhadap Total)
+        let itemSum = new Array(k).fill(0);
+        let rHitungScores = [];
+
+        for (let j = 0; j < k; j++) {
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+            
+            for (let i = 0; i < n; i++) {
+                let x = matrix[i][j];
+                let y = totals[i];
+                
+                sumX += x;
+                sumY += y;
+                sumXY += (x * y);
+                sumX2 += (x * x);
+                sumY2 += (y * y);
+            }
+
+            // Rumus Pearson r
+            let numerator = (n * sumXY) - (sumX * sumY);
+            let denominator = Math.sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+            
+            let rHitung = denominator === 0 ? 0 : numerator / denominator;
+            rHitungScores.push(rHitung);
+        }
+
+        // Tampilkan Hasil Validitas ke Tabel
+        const valTableBody = document.querySelector('#validity-table tbody');
+        valTableBody.innerHTML = '';
+        
+        rHitungScores.forEach((rHitung, index) => {
+            const tr = document.createElement('tr');
+            
+            const tdItem = document.createElement('td');
+            tdItem.innerText = 'Item X' + (index + 1);
+            tr.appendChild(tdItem);
+
+            const tdHitung = document.createElement('td');
+            tdHitung.innerText = rHitung.toFixed(4);
+            tr.appendChild(tdHitung);
+
+            const tdTabel = document.createElement('td');
+            tdTabel.innerText = rTabel.toFixed(3);
+            tr.appendChild(tdTabel);
+
+            const tdStatus = document.createElement('td');
+            if (rHitung > rTabel) {
+                tdStatus.innerHTML = '<span class="badge badge-success">VALID</span>';
+            } else {
+                tdStatus.innerHTML = '<span class="badge badge-danger">TIDAK VALID</span>';
+            }
+            tr.appendChild(tdStatus);
+            valTableBody.appendChild(tr);
+        });
+
+        // 3. Hitung Reliabilitas (Cronbach's Alpha)
+        // Varians Item = [Sum(X^2) - (Sum(X)^2 / N)] / N
+        let sumVariansItem = 0;
+        
+        for (let j = 0; j < k; j++) {
+            let sumX = 0;
+            let sumX2 = 0;
+            for (let i = 0; i < n; i++) {
+                sumX += matrix[i][j];
+                sumX2 += (matrix[i][j] * matrix[i][j]);
+            }
+            let variansItem = (sumX2 - ((sumX * sumX) / n)) / n;
+            sumVariansItem += variansItem;
+        }
+
+        // Varians Total
+        let sumY = 0;
+        let sumY2 = 0;
+        for (let i = 0; i < n; i++) {
+            sumY += totals[i];
+            sumY2 += (totals[i] * totals[i]);
+        }
+        let variansTotal = (sumY2 - ((sumY * sumY) / n)) / n;
+
+        // Rumus Cronbach Alpha
+        let alpha = 0;
+        if (variansTotal > 0 && k > 1) {
+            alpha = (k / (k - 1)) * (1 - (sumVariansItem / variansTotal));
+        }
+
+        // Tampilkan Hasil Reliabilitas
+        const rBox = document.getElementById('reliability-box');
+        const isReliable = alpha > 0.60;
+        
+        if (isReliable) {
+            rBox.className = "result-summary";
+            rBox.innerHTML = `
+                <div class="result-title" style="color: var(--success);">Reliabilitas Internal: RELIABEL</div>
+                <p>Nilai Cronbach's Alpha (&alpha;): <strong>${alpha.toFixed(4)}</strong></p>
+                <p style="font-size: 13px; margin-top:5px; color:#4a5568;">
+                    Kuesioner dinyatakan <strong>Reliabel</strong> karena nilai Alpha &gt; 0.60. Instrumen ini konsisten jika digunakan berulang kali.
+                </p>
+            `;
+        } else {
+            rBox.className = "result-summary unreliable";
+            rBox.innerHTML = `
+                <div class="result-title" style="color: var(--danger);">Reliabilitas Internal: TIDAK RELIABEL</div>
+                <p>Nilai Cronbach's Alpha (&alpha;): <strong>${alpha.toFixed(4)}</strong></p>
+                <p style="font-size: 13px; margin-top:5px; color:#4a5568;">
+                    Kuesioner dinyatakan <strong>Tidak Reliabel</strong> karena nilai Alpha &le; 0.60. Disarankan untuk memperbaiki atau mengeliminasi item pertanyaan yang tidak valid.
+                </p>
+            `;
+        }
+
+        // Munculkan Card Hasil
+        document.getElementById('result-card').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
